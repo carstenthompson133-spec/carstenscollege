@@ -78,8 +78,10 @@ export default function App() {
       console.warn('Could not read custom games:', e);
     }
 
-    // 2. Fetch fresh /games.json if available
-    fetch('/games.json')
+    // 2. Fetch fresh games.json if available (GitHub Pages compatible path)
+    const base = import.meta.env?.BASE_URL || './';
+    const jsonPath = base.endsWith('/') ? `${base}games.json` : `${base}/games.json`;
+    fetch(jsonPath)
       .then((res) => {
         if (!res.ok) throw new Error('Network response not ok');
         return res.json();
