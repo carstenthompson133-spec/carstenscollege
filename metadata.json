@@ -1,0 +1,6 @@
+{
+  "name": "Nova Unblocked Games",
+  "description": "Fast, lightweight unblocked games portal designed for school devices with instant iframe loading, search, and category filters.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

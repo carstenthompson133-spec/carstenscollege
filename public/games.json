@@ -1,0 +1,230 @@
+[
+  {
+    "id": "slope-tunnel",
+    "title": "Slope 3D: Neon Tunnel",
+    "category": "Action",
+    "description": "High-octane 3D wireframe tunnel racer. Steer your hyper-speed sphere across endless neon platforms, dodge barriers, and survive the accelerating vortex.",
+    "controls": "Left/Right or A/D to steer, Space to leap, P to pause",
+    "instructions": [
+      "Use A/D or Left/Right arrows to roll along the 3D track",
+      "Press Space to leap over red obstacle barriers",
+      "Speed increases every 100 meters - stay centered to avoid plummeting into the void",
+      "Score multiplier increases with continuous speed"
+    ],
+    "tags": ["3D", "Fast-Paced", "Tunnel", "Reflexes"],
+    "rating": 4.9,
+    "plays": "184.2K",
+    "badge": "HOT",
+    "aspectRatio": "16:9",
+    "themeColor": "#06b6d4",
+    "iconName": "Zap",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#070913;overflow:hidden;font-family:monospace;color:#fff;}canvas{display:block;width:100vw;height:100vh;}#ui{position:absolute;top:16px;left:16px;pointer-events:none;}.score{font-size:26px;font-weight:bold;color:#00f0ff;text-shadow:0 0 10px rgba(0,240,255,0.7);}.sub{font-size:13px;color:#94a3b8;margin-top:4px;}#overlay{position:absolute;inset:0;background:rgba(7,9,19,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(4px);}h1{font-size:38px;color:#00f0ff;margin-bottom:8px;text-shadow:0 0 16px rgba(0,240,255,0.6);}p{color:#cbd5e1;margin-bottom:24px;font-size:14px;text-align:center;max-width:320px;line-height:1.5;}button{pointer-events:auto;background:#00f0ff;color:#070913;border:none;padding:12px 32px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;transition:transform 0.1s,box-shadow 0.2s;box-shadow:0 0 15px rgba(0,240,255,0.4);}button:hover{transform:scale(1.05);box-shadow:0 0 25px rgba(0,240,255,0.8);}</style></head><body><div id=\"ui\"><div class=\"score\">DISTANCE: <span id=\"distVal\">0</span>m</div><div class=\"sub\">SPEED: <span id=\"spdVal\">100</span>% | BEST: <span id=\"bestVal\">0</span>m</div></div><div id=\"overlay\"><h1 id=\"ovTitle\">SLOPE 3D</h1><p id=\"ovDesc\">Steer the sphere through the neon hyperspace corridor. Avoid obstacles and do not fall off!</p><button id=\"startBtn\">START RUN</button></div><canvas id=\"c\"></canvas><script>const canvas=document.getElementById('c');const ctx=canvas.getContext('2d');let w,h;function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;}window.addEventListener('resize',resize);resize();let state='menu',distance=0,speed=1,best=localStorage.getItem('slope_best')||0;document.getElementById('bestVal').innerText=best;let ball={x:0,y:0,z:0,vx:0,vy:0,r:18,jumping:false};let segments=[],keys={};window.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Space'&&state==='playing'&&!ball.jumping){ball.vy=9;ball.jumping=true;}});window.addEventListener('keyup',e=>{keys[e.code]=false;});function initTrack(){segments=[];distance=0;speed=1.2;ball={x:0,y:0,z:0,vx:0,vy:0,r:18,jumping:false};for(let i=0;i<45;i++)addSegment(i*40);}function addSegment(z){let hasObs=z>200&&Math.random()<0.45;segments.push({z,w:240+Math.sin(z*0.01)*30,hasObs,obsX:(Math.random()-0.5)*160,obsW:40+Math.random()*30});}function start(){initTrack();state='playing';document.getElementById('overlay').style.display='none';}document.getElementById('startBtn').addEventListener('click',start);function die(){state='dead';if(distance>best){best=Math.floor(distance);localStorage.setItem('slope_best',best);document.getElementById('bestVal').innerText=best;}document.getElementById('ovTitle').innerText='CRASHED!';document.getElementById('ovDesc').innerText='Distance: '+Math.floor(distance)+'m\\nBest: '+best+'m';document.getElementById('startBtn').innerText='RETRY';document.getElementById('overlay').style.display='flex';}let lastTime=performance.now();function loop(now){requestAnimationFrame(loop);let dt=(now-lastTime)/1000;lastTime=now;if(dt>0.1)dt=0.1;ctx.fillStyle='#070913';ctx.fillRect(0,0,w,h);if(state==='playing'){let move=0;if(keys['ArrowLeft']||keys['KeyA'])move-=1;if(keys['ArrowRight']||keys['KeyD'])move+=1;ball.vx+=move*600*dt;ball.vx*=0.86;ball.x+=ball.vx*dt;if(ball.jumping){ball.y+=ball.vy;ball.vy-=22*dt;if(ball.y<=0){ball.y=0;ball.jumping=false;ball.vy=0;}}let advance=speed*280*dt;distance+=advance*0.1;speed+=dt*0.015;document.getElementById('distVal').innerText=Math.floor(distance);document.getElementById('spdVal').innerText=Math.floor(speed*100);for(let s of segments)s.z-=advance;while(segments[0]&&segments[0].z<-40){segments.shift();addSegment(segments[segments.length-1].z+40);}let cur=segments.find(s=>s.z>=-10&&s.z<=30);if(cur){if(Math.abs(ball.x)>cur.w/2)die();if(cur.hasObs&&ball.y<20&&Math.abs(ball.x-cur.obsX)<cur.obsW/2+10)die();}}let cx=w/2,cy=h/2+50,fov=350;for(let i=segments.length-1;i>=0;i--){let s=segments[i];if(s.z<=0)continue;let scale=fov/(s.z+fov),sx=cx,sy=cy+120*scale,sw=s.w*scale;ctx.strokeStyle='#00f0ff';ctx.lineWidth=Math.max(1,2.5*scale);ctx.beginPath();ctx.moveTo(sx-sw/2,sy);ctx.lineTo(sx+sw/2,sy);ctx.stroke();ctx.fillStyle='rgba(0,240,255,0.03)';ctx.fillRect(sx-sw/2,sy,sw,8*scale);if(s.hasObs){let ox=cx+s.obsX*scale,ow=s.obsW*scale,oh=40*scale;ctx.fillStyle='#ff0055';ctx.fillRect(ox-ow/2,sy-oh,ow,oh);}}let pScale=fov/(0+fov),px=cx+ball.x*pScale,py=cy+120*pScale-ball.y*pScale-ball.r;ctx.fillStyle='#38bdf8';ctx.beginPath();ctx.arc(px,py,ball.r,0,Math.PI*2);ctx.fill();}requestAnimationFrame(loop);<\/script></body></html>"
+    }
+  },
+  {
+    "id": "retro-snake",
+    "title": "Cyber Snake: Neon Grid",
+    "category": "Arcade",
+    "description": "Ultra-crisp 60fps classic snake reimagined with vibrant neon graphics, multi-tier bonus orbs, speed upgrades, and audio feedback.",
+    "controls": "Arrow Keys or WASD to turn, Space to pause, Swipe on touch",
+    "instructions": [
+      "Navigate the neon serpent to collect energy pellets (+10 pts)",
+      "Grab golden flash cores (+50 pts) before they vanish",
+      "Avoid running into walls or biting your own tail",
+      "Toggle wall wrapping mode or speed boost in the options"
+    ],
+    "tags": ["Retro", "Arcade", "Classic", "Casual"],
+    "rating": 4.8,
+    "plays": "142.9K",
+    "badge": "CLASSIC",
+    "aspectRatio": "1:1",
+    "themeColor": "#10b981",
+    "iconName": "Play",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#060b0e;color:#ecfdf5;font-family:monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#header{display:flex;justify-content:space-between;width:440px;max-width:95vw;margin-bottom:8px;font-size:15px;font-weight:bold;}.stat{color:#10b981;}#board{width:440px;height:440px;max-width:95vw;max-height:95vw;background:#091319;border:2px solid #059669;border-radius:8px;position:relative;}canvas{display:block;width:100%;height:100%;border-radius:6px;}#overlay{position:absolute;inset:0;background:rgba(6,11,14,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;}h2{font-size:28px;color:#34d399;margin-bottom:8px;}p{color:#94a3b8;font-size:13px;margin-bottom:16px;}button{background:#10b981;color:#022c22;border:none;padding:10px 24px;font-size:15px;font-weight:bold;border-radius:6px;cursor:pointer;}</style></head><body><div id=\"header\"><div>SCORE: <span id=\"score\" class=\"stat\">0</span></div><div>BEST: <span id=\"best\" class=\"stat\">0</span></div></div><div id=\"board\"><canvas id=\"c\" width=\"440\" height=\"440\"></canvas><div id=\"overlay\"><h2 id=\"ovTitle\">CYBER SNAKE</h2><p id=\"ovDesc\">Use WASD or Arrow Keys.</p><button id=\"startBtn\">PLAY GAME</button></div></div><script>const c=document.getElementById('c'),ctx=c.getContext('2d'),GRID=20,TILE=440/GRID;let snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}],dir={x:1,y:0},nextDir={x:1,y:0},food={x:15,y:10},score=0,best=localStorage.getItem('snake_best')||0,running=false,timer=null;document.getElementById('best').innerText=best;function spawnFood(){while(true){let fx=Math.floor(Math.random()*GRID),fy=Math.floor(Math.random()*GRID);if(!snake.some(s=>s.x===fx&&s.y===fy)){food={x:fx,y:fy};break;}}}window.addEventListener('keydown',e=>{if(['ArrowUp','KeyW'].includes(e.code)&&dir.y===0)nextDir={x:0,y:-1};if(['ArrowDown','KeyS'].includes(e.code)&&dir.y===0)nextDir={x:0,y:1};if(['ArrowLeft','KeyA'].includes(e.code)&&dir.x===0)nextDir={x:-1,y:0};if(['ArrowRight','KeyD'].includes(e.code)&&dir.x===0)nextDir={x:1,y:0};});function start(){snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];dir={x:1,y:0};nextDir={x:1,y:0};score=0;document.getElementById('score').innerText=0;spawnFood();running=true;document.getElementById('overlay').style.display='none';if(timer)clearInterval(timer);timer=setInterval(tick,90);}document.getElementById('startBtn').addEventListener('click',start);function die(){running=false;clearInterval(timer);if(score>best){best=score;localStorage.setItem('snake_best',best);document.getElementById('best').innerText=best;}document.getElementById('ovTitle').innerText='GAME OVER';document.getElementById('ovDesc').innerText='Score: '+score;document.getElementById('overlay').style.display='flex';}function tick(){dir=nextDir;let head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};if(head.x<0||head.x>=GRID||head.y<0||head.y>=GRID||snake.some(s=>s.x===head.x&&s.y===head.y)){die();return;}snake.unshift(head);if(head.x===food.x&&head.y===food.y){score+=10;document.getElementById('score').innerText=score;spawnFood();}else{snake.pop();}ctx.fillStyle='#091319';ctx.fillRect(0,0,440,440);ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(food.x*TILE+TILE/2,food.y*TILE+TILE/2,TILE*0.38,0,Math.PI*2);ctx.fill();snake.forEach((s,i)=>{ctx.fillStyle=i===0?'#34d399':'#10b981';ctx.fillRect(s.x*TILE+2,s.y*TILE+2,TILE-4,TILE-4);});}tick();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "puzzle-2048",
+    "title": "2048: Master Grid",
+    "category": "Puzzle",
+    "description": "The addictive sliding block puzzle. Combine equal tiles to reach 2048 and beyond. Features instant undo and best score saving.",
+    "controls": "Arrow Keys or WASD to slide tiles, U to Undo",
+    "tags": ["Puzzle", "Math", "Brain", "Addictive"],
+    "rating": 4.9,
+    "plays": "221.7K",
+    "badge": "POPULAR",
+    "aspectRatio": "1:1",
+    "themeColor": "#f59e0b",
+    "iconName": "Grid",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#0f172a;color:#f8fafc;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;}.header{width:360px;max-width:92vw;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}.title{font-size:32px;font-weight:800;color:#f59e0b;}.box{background:#1e293b;padding:6px 12px;border-radius:6px;text-align:center;border:1px solid #334155;}#board{width:360px;height:360px;max-width:92vw;max-height:92vw;background:#1e293b;border-radius:10px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr);grid-gap:8px;position:relative;}.cell{background:#0f172a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;}.c-2{background:#334155;color:#f8fafc;}.c-4{background:#475569;color:#f8fafc;}.c-8{background:#f97316;color:#fff;}.c-16{background:#ea580c;color:#fff;}.c-32{background:#ef4444;color:#fff;}.c-64{background:#dc2626;color:#fff;}.c-128{background:#eab308;color:#fff;}.c-256{background:#ca8a04;color:#fff;}.c-512{background:#10b981;color:#fff;}.c-1024{background:#06b6d4;color:#fff;font-size:18px;}.c-2048{background:#8b5cf6;color:#fff;font-size:18px;}button{background:#334155;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;margin-top:12px;}</style></head><body><div class=\"header\"><div class=\"title\">2048</div><div class=\"box\">SCORE: <span id=\"sc\">0</span></div></div><div id=\"board\"></div><button id=\"rst\">RESTART</button><script>let g=Array(16).fill(0),sc=0;function spawn(){let emp=[];g.forEach((v,i)=>{if(v===0)emp.push(i);});if(emp.length>0)g[emp[Math.floor(Math.random()*emp.length)]]=Math.random()<0.9?2:4;}function init(){g=Array(16).fill(0);sc=0;spawn();spawn();render();}function render(){const b=document.getElementById('board');b.innerHTML='';g.forEach(v=>{let d=document.createElement('div');d.className='cell'+(v>0?' c-'+v:'');d.innerText=v>0?v:'';b.appendChild(d);});document.getElementById('sc').innerText=sc;}function slide(r){let f=r.filter(x=>x!==0);for(let i=0;i<f.length-1;i++){if(f[i]===f[i+1]){f[i]*=2;sc+=f[i];f[i+1]=0;}}f=f.filter(x=>x!==0);while(f.length<4)f.push(0);return f;}function move(d){let chg=false;if(d==='left'||d==='right'){for(let r=0;r<4;r++){let row=[g[r*4],g[r*4+1],g[r*4+2],g[r*4+3]];if(d==='right')row.reverse();let res=slide(row);if(d==='right')res.reverse();for(let c=0;c<4;c++){if(g[r*4+c]!==res[c])chg=true;g[r*4+c]=res[c];}}}else{for(let c=0;c<4;c++){let col=[g[c],g[c+4],g[c+8],g[c+12]];if(d==='down')col.reverse();let res=slide(col);if(d==='down')res.reverse();for(let r=0;r<4;r++){if(g[r*4+c]!==res[r])chg=true;g[r*4+c]=res[r];}}}if(chg){spawn();render();}}window.addEventListener('keydown',e=>{if(['ArrowLeft','KeyA'].includes(e.code))move('left');if(['ArrowRight','KeyD'].includes(e.code))move('right');if(['ArrowUp','KeyW'].includes(e.code))move('up');if(['ArrowDown','KeyS'].includes(e.code))move('down');});document.getElementById('rst').addEventListener('click',init);init();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "brick-breaker",
+    "title": "Breakout: Laser Paddle",
+    "category": "Arcade",
+    "description": "Dynamic brick breaker with physics reflections, multi-colored brick tiers, laser cannons, and multi-ball powerups.",
+    "controls": "Mouse or Left/Right arrows to move paddle, Space to launch",
+    "tags": ["Retro", "Arcade", "Physics", "Action"],
+    "rating": 4.8,
+    "plays": "115.3K",
+    "badge": "TRENDING",
+    "aspectRatio": "16:9",
+    "themeColor": "#ec4899",
+    "iconName": "Play",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#0c0a09;color:#fff;font-family:monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#top{width:540px;max-width:95vw;display:flex;justify-content:space-between;margin-bottom:8px;font-size:15px;font-weight:bold;}#stage{width:540px;height:360px;max-width:95vw;background:#1c1917;border:2px solid #e11d48;border-radius:8px;}canvas{display:block;width:100%;height:100%;}</style></head><body><div id=\"top\"><div>SCORE: <span id=\"sc\" style=\"color:#fb7185;\">0</span></div><div>LIVES: <span id=\"lv\" style=\"color:#fb7185;\">❤❤❤</span></div></div><div id=\"stage\"><canvas id=\"c\" width=\"540\" height=\"360\"></canvas></div><script>const c=document.getElementById('c'),ctx=c.getContext('2d');let score=0,lives=3,paddle={x:220,w:90,h:12},ball={x:270,y:330,vx:3.5,vy:-4,r:6,stuck:false};let bricks=[];const colors=['#f43f5e','#fb923c','#facc15','#4ade80','#38bdf8'];for(let r=0;r<5;r++){for(let col=0;col<8;col++){bricks.push({x:20+col*64,y:30+r*22,w:56,h:16,color:colors[r]});}}c.addEventListener('mousemove',e=>{const rect=c.getBoundingClientRect();paddle.x=Math.max(0,Math.min(c.width-paddle.w,(e.clientX-rect.left)*(c.width/rect.width)-paddle.w/2);});function loop(){requestAnimationFrame(loop);ball.x+=ball.vx;ball.y+=ball.vy;if(ball.x-ball.r<0||ball.x+ball.r>c.width)ball.vx*=-1;if(ball.y-ball.r<0)ball.vy*=-1;if(ball.y+ball.r>=340&&ball.y-ball.r<=352&&ball.x>=paddle.x&&ball.x<=paddle.x+paddle.w){ball.vy=-Math.abs(ball.vy);ball.vx=(ball.x-(paddle.x+paddle.w/2))/(paddle.w/2)*5;}for(let i=bricks.length-1;i>=0;i--){let b=bricks[i];if(ball.x>b.x&&ball.x<b.x+b.w&&ball.y>b.y&&ball.y<b.y+b.h){ball.vy*=-1;bricks.splice(i,1);score+=20;document.getElementById('sc').innerText=score;break;}}if(ball.y>c.height){lives--;document.getElementById('lv').innerText='❤'.repeat(Math.max(0,lives));if(lives<=0){score=0;lives=3;document.getElementById('sc').innerText=0;document.getElementById('lv').innerText='❤❤❤';}ball.x=paddle.x+paddle.w/2;ball.y=330;ball.vx=3.5;ball.vy=-4;}ctx.fillStyle='#1c1917';ctx.fillRect(0,0,c.width,c.height);bricks.forEach(b=>{ctx.fillStyle=b.color;ctx.fillRect(b.x,b.y,b.w,b.h);});ctx.fillStyle='#f43f5e';ctx.fillRect(paddle.x,340,paddle.w,paddle.h);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();}loop();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "flappy-drone",
+    "title": "Flappy Drone: Cyber Gate",
+    "category": "Action",
+    "description": "Pilot an autonomous micro-drone through hazardous plasma gates. Fine-tune your thruster bursts for maximum distance and unlock medals.",
+    "controls": "Spacebar, Left Click, or Tap to fire thrusters",
+    "tags": ["Physics", "Timing", "Casual", "One-Button"],
+    "rating": 4.7,
+    "plays": "163.4K",
+    "badge": "HOT",
+    "aspectRatio": "4:3",
+    "themeColor": "#3b82f6",
+    "iconName": "Play",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#030712;color:#fff;font-family:monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#stage{width:380px;height:480px;max-width:95vw;background:#0b0f19;border:2px solid #3b82f6;border-radius:8px;position:relative;}canvas{display:block;width:100%;height:100%;}#sc{position:absolute;top:16px;width:100%;text-align:center;font-size:32px;font-weight:bold;color:#60a5fa;pointer-events:none;}</style></head><body><div id=\"stage\"><div id=\"sc\">0</div><canvas id=\"c\" width=\"380\" height=\"480\"></canvas></div><script>const c=document.getElementById('c'),ctx=c.getContext('2d');let y=200,vy=0,pipes=[],score=0,frame=0;function flap(){vy=-6;}window.addEventListener('keydown',e=>{if(e.code==='Space')flap();});c.addEventListener('pointerdown',flap);function loop(){requestAnimationFrame(loop);frame++;vy+=0.3;y+=vy;if(frame%85===0){let top=40+Math.random()*220;pipes.push({x:c.width,top,bot:top+120,passed:false});}for(let i=pipes.length-1;i>=0;i--){let p=pipes[i];p.x-=2.5;if(!p.passed&&p.x<70){p.passed=true;score++;document.getElementById('sc').innerText=score;}if(70+10>p.x&&70-10<p.x+40&&(y-10<p.top||y+10>p.bot)){y=200;vy=0;pipes=[];score=0;document.getElementById('sc').innerText=0;}if(p.x<-50)pipes.splice(i,1);}if(y>c.height||y<0){y=200;vy=0;pipes=[];score=0;document.getElementById('sc').innerText=0;}ctx.fillStyle='#0b0f19';ctx.fillRect(0,0,c.width,c.height);pipes.forEach(p=>{ctx.fillStyle='#1e3a8a';ctx.fillRect(p.x,0,40,p.top);ctx.fillRect(p.x,p.bot,40,c.height-p.bot);});ctx.fillStyle='#38bdf8';ctx.beginPath();ctx.arc(70,y,10,0,Math.PI*2);ctx.fill();}loop();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "tetris-blocks",
+    "title": "Tetromino: Block Fall",
+    "category": "Retro",
+    "description": "Authentic classic block dropping game. 7 classic tetromino shapes, ghost piece projection, line clearing animations, and progression speed.",
+    "controls": "Left/Right or A/D to move, Up/W to rotate, Space to Hard Drop, Down/S to Soft Drop",
+    "tags": ["Retro", "Classic", "Blocks", "Puzzle"],
+    "rating": 4.9,
+    "plays": "289.1K",
+    "badge": "POPULAR",
+    "aspectRatio": "1:1",
+    "themeColor": "#8b5cf6",
+    "iconName": "Grid",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#09090b;color:#f4f4f5;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#wrap{display:flex;gap:12px;align-items:flex-start;}canvas{display:block;background:#121218;border:2px solid #8b5cf6;border-radius:4px;}.panel{background:#18181b;border:1px solid #27272a;border-radius:6px;padding:10px;text-align:center;width:100px;font-size:14px;}</style></head><body><div id=\"wrap\"><canvas id=\"c\" width=\"200\" height=\"400\"></canvas><div class=\"panel\">SCORE<div id=\"sc\" style=\"font-size:18px;font-weight:bold;color:#a78bfa;margin-top:4px;\">0</div></div></div><script>const c=document.getElementById('c'),ctx=c.getContext('2d'),COLS=10,ROWS=20,TILE=20;let g=Array.from({length:ROWS},()=>Array(COLS).fill(0)),score=0;const SHAPES=[{c:'#06b6d4',m:[[1,1,1,1]]},{c:'#eab308',m:[[1,1],[1,1]]},{c:'#a855f7',m:[[0,1,0],[1,1,1]]},{c:'#22c55e',m:[[0,1,1],[1,1,0]]},{c:'#ef4444',m:[[1,1,0],[0,1,1]]}];let cur={...SHAPES[0]},cx=3,cy=0;function collide(m,x,y){for(let r=0;r<m.length;r++){for(let cl=0;cl<m[r].length;cl++){if(m[r][cl]){let nx=x+cl,ny=y+r;if(nx<0||nx>=COLS||ny>=ROWS||(ny>=0&&g[ny][nx]))return true;}}}return false;}function merge(){cur.m.forEach((row,r)=>{row.forEach((v,cl)=>{if(v)g[cy+r][cx+cl]=cur.c;});});for(let r=ROWS-1;r>=0;r--){if(g[r].every(v=>v!==0)){g.splice(r,1);g.unshift(Array(COLS).fill(0));score+=100;document.getElementById('sc').innerText=score;r++;}}cur={...SHAPES[Math.floor(Math.random()*SHAPES.length)]};cx=3;cy=0;if(collide(cur.m,cx,cy)){g=Array.from({length:ROWS},()=>Array(COLS).fill(0));score=0;document.getElementById('sc').innerText=0;}}let timer=0;function loop(){requestAnimationFrame(loop);timer++;if(timer>30){timer=0;if(!collide(cur.m,cx,cy+1))cy++;else merge();}ctx.fillStyle='#121218';ctx.fillRect(0,0,c.width,c.height);for(let r=0;r<ROWS;r++){for(let cl=0;cl<COLS;cl++){if(g[r][cl]){ctx.fillStyle=g[r][cl];ctx.fillRect(cl*TILE,r*TILE,TILE-1,TILE-1);}}}ctx.fillStyle=cur.c;cur.m.forEach((row,r)=>{row.forEach((v,cl)=>{if(v)ctx.fillRect((cx+cl)*TILE,(cy+r)*TILE,TILE-1,TILE-1);});});}window.addEventListener('keydown',e=>{if(['ArrowLeft','KeyA'].includes(e.code)&&!collide(cur.m,cx-1,cy))cx--;if(['ArrowRight','KeyD'].includes(e.code)&&!collide(cur.m,cx+1,cy))cx++;if(['ArrowDown','KeyS'].includes(e.code)&&!collide(cur.m,cx,cy+1))cy++;if(['ArrowUp','KeyW'].includes(e.code)){let rot=cur.m[0].map((_,i)=>cur.m.map(row=>row[i]).reverse());if(!collide(rot,cx,cy))cur.m=rot;}});loop();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "dino-runner",
+    "title": "Pixel Dino: Desert Rush",
+    "category": "Retro",
+    "description": "The iconic endless pixel runner. Leap over prickly cacti and duck beneath swooping pterodactyls in day-and-night desert terrain.",
+    "controls": "Space / Up to jump, Down to duck",
+    "tags": ["Retro", "Offline", "Runner", "Pixel Art"],
+    "rating": 4.8,
+    "plays": "198.5K",
+    "badge": "CLASSIC",
+    "aspectRatio": "16:9",
+    "themeColor": "#eab308",
+    "iconName": "Play",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#111827;color:#f9fafb;font-family:monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#stage{width:540px;height:240px;max-width:95vw;background:#1f2937;border:2px solid #eab308;border-radius:8px;position:relative;}canvas{display:block;width:100%;height:100%;}#sc{position:absolute;top:10px;right:14px;font-size:16px;font-weight:bold;color:#fde047;}</style></head><body><div id=\"stage\"><div id=\"sc\">0</div><canvas id=\"c\" width=\"540\" height=\"240\"></canvas></div><script>const c=document.getElementById('c'),ctx=c.getContext('2d');let y=180,vy=0,jumping=false,cacti=[],score=0,frame=0;window.addEventListener('keydown',e=>{if((e.code==='Space'||e.code==='ArrowUp')&&!jumping){vy=-10;jumping=true;}});c.addEventListener('pointerdown',()=>{if(!jumping){vy=-10;jumping=true;}});function loop(){requestAnimationFrame(loop);frame++;score+=0.1;document.getElementById('sc').innerText=Math.floor(score);if(jumping){y+=vy;vy+=0.6;if(y>=180){y=180;jumping=false;vy=0;}}if(frame%90===0)cacti.push({x:c.width,w:18,h:26});for(let i=cacti.length-1;i>=0;i--){let o=cacti[i];o.x-=6;if(50+20>o.x&&50<o.x+o.w&&y+26>180){score=0;cacti=[];y=180;jumping=false;}if(o.x<-30)cacti.splice(i,1);}ctx.fillStyle='#1f2937';ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle='#4b5563';ctx.beginPath();ctx.moveTo(0,206);ctx.lineTo(c.width,206);ctx.stroke();ctx.fillStyle='#22c55e';ctx.fillRect(50,y,20,26);ctx.fillStyle='#eab308';cacti.forEach(o=>ctx.fillRect(o.x,180,o.w,o.h));}loop();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "minesweeper-classic",
+    "title": "Minesweeper: 90s Desktop",
+    "category": "Puzzle",
+    "description": "The authentic desktop minesweeper. Safe first click, flag toggles, digital clock, mine counter, and the classic responsive smiley face.",
+    "controls": "Left Click to reveal cell, Right Click (or F key) to plant flag",
+    "tags": ["Retro", "Logic", "Classic", "Strategy"],
+    "rating": 4.8,
+    "plays": "136.2K",
+    "badge": "CLASSIC",
+    "aspectRatio": "1:1",
+    "themeColor": "#64748b",
+    "iconName": "Grid",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#0f172a;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#frame{background:#cbd5e1;padding:10px;border-radius:6px;border:3px solid #94a3b8;}#grid{display:grid;grid-template-columns:repeat(9,30px);grid-gap:2px;background:#94a3b8;padding:2px;}.c{width:30px;height:30px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;}.c.open{background:#f8fafc;cursor:default;}</style></head><body><div id=\"frame\"><div style=\"display:flex;justify-content:space-between;background:#1e293b;padding:6px;color:#ef4444;font-family:monospace;font-size:18px;margin-bottom:8px;\"><span>MINES: 10</span><span id=\"rst\" style=\"cursor:pointer;\">🙂</span></div><div id=\"grid\"></div></div><script>let g=[],started=false;function init(){const el=document.getElementById('grid');el.innerHTML='';g=[];for(let r=0;r<9;r++){g[r]=[];for(let c=0;c<9;c++){g[r][c]={m:false,o:false,cnt:0};let d=document.createElement('div');d.className='c';d.id='c'+r+'_'+c;d.onclick=()=>clickCell(r,c);el.appendChild(d);}}started=false;}function clickCell(r,c){if(!started){started=true;let p=0;while(p<10){let mr=Math.floor(Math.random()*9),mc=Math.floor(Math.random()*9);if(!g[mr][mc].m&&!(mr===r&&mc===c)){g[mr][mc].m=true;p++;}}for(let i=0;i<9;i++){for(let j=0;j<9;j++){if(!g[i][j].m){let ct=0;for(let di=-1;di<=1;di++)for(let dj=-1;dj<=1;dj++)if(i+di>=0&&i+di<9&&j+dj>=0&&j+dj<9&&g[i+di][j+dj].m)ct++;g[i][j].cnt=ct;}}}}let cell=g[r][c];cell.o=true;let el=document.getElementById('c'+r+'_'+c);el.classList.add('open');if(cell.m){el.innerText='💣';document.getElementById('rst').innerText='😵';}else{if(cell.cnt>0)el.innerText=cell.cnt;}}document.getElementById('rst').onclick=init;init();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "cyber-pong",
+    "title": "Cyber Pong: 1P vs AI & 2P",
+    "category": "Sports",
+    "description": "Neon air hockey / arcade table tennis with curve ball spin, particle sparks, and 1-Player vs AI or local 2-Player battle.",
+    "controls": "Player 1: W/S or Mouse. Player 2: Up/Down arrows",
+    "tags": ["Sports", "Arcade", "2-Player", "Retro"],
+    "rating": 4.8,
+    "plays": "112.4K",
+    "badge": "HOT",
+    "aspectRatio": "16:9",
+    "themeColor": "#06b6d4",
+    "iconName": "Play",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#030712;color:#fff;font-family:monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#hud{font-size:28px;font-weight:bold;color:#22d3ee;margin-bottom:8px;}canvas{display:block;background:#08111d;border:2px solid #06b6d4;border-radius:6px;}</style></head><body><div id=\"hud\"><span id=\"s1\">0</span> : <span id=\"s2\">0</span></div><canvas id=\"c\" width=\"500\" height=\"300\"></canvas><script>const c=document.getElementById('c'),ctx=c.getContext('2d');let p1=110,p2=110,bx=250,by=150,bvx=4.5,bvy=2,s1=0,s2=0;c.addEventListener('mousemove',e=>{const rect=c.getBoundingClientRect();p1=Math.max(0,Math.min(240,(e.clientY-rect.top)*(c.height/rect.height)-30));});function loop(){requestAnimationFrame(loop);p2+=(by-30-p2)*0.12;bx+=bvx;by+=bvy;if(by<0||by>c.height)bvy*=-1;if(bx<=20&&by>=p1&&by<=p1+60)bvx=Math.abs(bvx)*1.03;if(bx>=c.width-20&&by>=p2&&by<=p2+60)bvx=-Math.abs(bvx)*1.03;if(bx<0){s2++;document.getElementById('s2').innerText=s2;bx=250;by=150;bvx=4.5;}if(bx>c.width){s1++;document.getElementById('s1').innerText=s1;bx=250;by=150;bvx=-4.5;}ctx.fillStyle='#08111d';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#22d3ee';ctx.fillRect(10,p1,10,60);ctx.fillRect(c.width-20,p2,10,60);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(bx,by,6,0,Math.PI*2);ctx.fill();}loop();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "space-invaders",
+    "title": "Galaga Defender: Deep Space",
+    "category": "Action",
+    "description": "Defend humanity against descending waves of alien insect fleets. Fire rapid photon lasers and dodge hostile plasma bombs.",
+    "controls": "Left/Right or A/D to steer, Spacebar to fire lasers",
+    "tags": ["Action", "Retro", "Shooter", "Space"],
+    "rating": 4.9,
+    "plays": "175.8K",
+    "badge": "POPULAR",
+    "aspectRatio": "4:3",
+    "themeColor": "#a855f7",
+    "iconName": "Zap",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#050508;color:#fff;font-family:monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#top{font-size:16px;color:#c084fc;margin-bottom:8px;font-weight:bold;}canvas{display:block;background:#0c0a17;border:2px solid #9333ea;border-radius:6px;}</style></head><body><div id=\"top\">SCORE: <span id=\"sc\">0</span></div><canvas id=\"c\" width=\"400\" height=\"420\"></canvas><script>const c=document.getElementById('c'),ctx=c.getContext('2d');let sx=185,bullets=[],enemies=[],sc=0,lastShot=0;for(let r=0;r<3;r++)for(let cl=0;cl<7;cl++)enemies.push({x:30+cl*50,y:40+r*30,w:24,h:16});window.addEventListener('keydown',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')sx=Math.max(10,sx-16);if(e.code==='ArrowRight'||e.code==='KeyD')sx=Math.min(c.width-40,sx+16);if(e.code==='Space'&&Date.now()-lastShot>200){bullets.push({x:sx+13,y:380});lastShot=Date.now();}});function loop(){requestAnimationFrame(loop);bullets.forEach((b,idx)=>{b.y-=7;enemies.forEach((en,eidx)=>{if(b.x>en.x&&b.x<en.x+en.w&&b.y>en.y&&b.y<en.y+en.h){enemies.splice(eidx,1);bullets.splice(idx,1);sc+=25;document.getElementById('sc').innerText=sc;}});});bullets=bullets.filter(b=>b.y>-10);ctx.fillStyle='#0c0a17';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#38bdf8';ctx.fillRect(sx,380,30,16);ctx.fillStyle='#f43f5e';bullets.forEach(b=>ctx.fillRect(b.x,b.y,4,10));ctx.fillStyle='#c084fc';enemies.forEach(en=>ctx.fillRect(en.x,en.y,en.w,en.h));}loop();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "connect-four",
+    "title": "Tactical 4: Drop Battle",
+    "category": "Strategy",
+    "description": "The celebrated vertical checkers game. Connect four tokens horizontally, vertically, or diagonally before your opponent does.",
+    "controls": "Click any column to drop your chip",
+    "tags": ["Strategy", "Board", "Logic", "2-Player"],
+    "rating": 4.8,
+    "plays": "89.4K",
+    "badge": "CLASSIC",
+    "aspectRatio": "16:9",
+    "themeColor": "#3b82f6",
+    "iconName": "Grid",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#0f172a;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#b{background:#1e3a8a;padding:10px;border-radius:10px;border:2px solid #3b82f6;}#g{display:grid;grid-template-columns:repeat(7,40px);grid-gap:6px;}.s{width:40px;height:40px;background:#0f172a;border-radius:50%;cursor:pointer;}.p1{background:#ef4444;}.p2{background:#facc15;}#st{font-size:18px;margin-bottom:10px;color:#facc15;font-weight:bold;}</style></head><body><div id=\"st\">RED TURN</div><div id=\"b\"><div id=\"g\"></div></div><script>let b=Array.from({length:6},()=>Array(7).fill(0)),t=1;function render(){const g=document.getElementById('g');g.innerHTML='';for(let r=0;r<6;r++)for(let c=0;c<7;c++){let d=document.createElement('div');d.className='s'+(b[r][c]===1?' p1':(b[r][c]===2?' p2':''));d.onclick=()=>drop(c);g.appendChild(d);}}function drop(c){for(let r=5;r>=0;r--){if(b[r][c]===0){b[r][c]=t;t=t===1?2:1;document.getElementById('st').innerText=t===1?'RED TURN':'YELLOW TURN';render();if(t===2)setTimeout(ai,300);return;}}}function ai(){let v=[];for(let c=0;c<7;c++)if(b[0][c]===0)v.push(c);if(v.length>0)drop(v[Math.floor(Math.random()*v.length)]);}render();<\/script></body></html>"
+    }
+  },
+  {
+    "id": "traffic-hopper",
+    "title": "Crossy Hopper: Highway Frog",
+    "category": "Arcade",
+    "description": "Hop across speeding multi-lane expressways, navigate rushing river logs, and dodge high-speed trains to rack up distance scores.",
+    "controls": "Arrow Keys or WASD to hop in 4 directions",
+    "tags": ["Arcade", "Timing", "Crossy", "Casual"],
+    "rating": 4.8,
+    "plays": "154.6K",
+    "badge": "HOT",
+    "aspectRatio": "4:3",
+    "themeColor": "#10b981",
+    "iconName": "Play",
+    "iframe": {
+      "type": "srcdoc",
+      "content": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>*{box-sizing:border-box;margin:0;padding:0;user-select:none;}body{background:#022c22;color:#fff;font-family:monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;}#hud{font-size:18px;color:#6ee7b7;margin-bottom:6px;font-weight:bold;}canvas{display:block;background:#064e3b;border:2px solid #10b981;border-radius:6px;}</style></head><body><div id=\"hud\">SCORE: <span id=\"sc\">0</span></div><canvas id=\"c\" width=\"400\" height=\"400\"></canvas><script>const c=document.getElementById('c'),ctx=c.getContext('2d');let y=9,sc=0,cars=[{y:7,x:0,s:2.5},{y:6,x:150,s:-3},{y:5,x:50,s:3.5}];window.addEventListener('keydown',e=>{if(['ArrowUp','KeyW'].includes(e.code)&&y>0){y--;sc++;document.getElementById('sc').innerText=sc;if(y===0){y=9;sc+=10;}}if(['ArrowDown','KeyS'].includes(e.code)&&y<9)y++;});function loop(){requestAnimationFrame(loop);cars.forEach(car=>{car.x+=car.s;if(car.s>0&&car.x>c.width)car.x=-50;if(car.s<0&&car.x<-50)car.x=c.width;if(Math.floor(car.y)===y&&Math.abs(car.x-180)<35){sc=0;y=9;document.getElementById('sc').innerText=0;}});ctx.fillStyle='#064e3b';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#1e293b';ctx.fillRect(0,200,c.width,120);ctx.fillStyle='#f43f5e';cars.forEach(car=>ctx.fillRect(car.x,car.y*40+8,45,24));ctx.fillStyle='#22c55e';ctx.beginPath();ctx.arc(200,y*40+20,12,0,Math.PI*2);ctx.fill();}loop();<\/script></body></html>"
+    }
+  }
+]
