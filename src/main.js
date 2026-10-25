@@ -1,4 +1,3 @@
-import './index.css';
 import { INITIAL_GAMES } from './data/gamesData.js';
 import { ICONS } from './icons.js';
 
